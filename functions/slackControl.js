@@ -6,16 +6,25 @@ export const openConversation = (client, users) =>
 export const successMessage = async (client, channel, users) => {
   await client.chat.postMessage({
     channel: channel,
-    text: `Hi <@${users[0]}> + <@${users[1]}>!`,
-    // blocks: [
-    //   {
-    //     type: "section",
-    //     text: {
-    //       type: "mrkdwn",
-    //       text: `Yo yo yo yo`,
-    //     },
-    //   },
-    // ],
+    text: `Hi, <@${users[0]}> and <@${users[1]}>, you've been paired up together!`,
+    blocks: [
+      { type: "divider" },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `Hello <@${users[0]}> & <@${users[1]}>! ✨`,
+        },
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: "You two have been paired up this week! Please schedule some time together! 😊💛",
+        },
+      },
+      { type: "divider" },
+    ],
   });
 };
 
@@ -36,14 +45,14 @@ export const welcomeMessage = async (event, client) => {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `Welcome, <@${event.user}>!`,
+          text: `*Welcome, <@${event.user}>!*`,
         },
       },
       {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: "Everyone in this channel gets paired up every Monday for a cup of coffee/tea/water 🍵",
+          text: "Everyone in this channel gets paired up every Monday for a cup of coffee☕/tea🍵/water🌊",
         },
       },
       {
