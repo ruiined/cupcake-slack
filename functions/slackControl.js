@@ -52,7 +52,7 @@ export const welcomeMessage = async (event, client) => {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: "Everyone in this channel gets paired up every Monday for a cup of coffee☕/tea🍵/water🌊",
+          text: "Everyone in this channel gets paired up every Monday for a cup of coffee/tea/water.",
         },
       },
       {
