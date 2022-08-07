@@ -2,7 +2,7 @@
   "name": "cupcake",
   "version": "1.0.0",
   "description": "let's connect",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "test": "test"
   },
@@ -14,5 +14,9 @@
     "slack"
   ],
   "author": "ruiined",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@slack/bolt": "^3.12.1",
+    "dotenv": "^16.0.1"
+  }
 }
