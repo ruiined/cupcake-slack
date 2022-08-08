@@ -18,13 +18,38 @@ const app = new App({
   port: process.env.PORT || 3000,
 });
 
-const CHANNEL_ID = "C03T1MPCJJD";
+const CHANNEL_ID = "C03SWPQCP1A";
 
 app.event("member_joined_channel", ({ event, client }) =>
   welcomeMessage(event, client)
 );
 
-app.event("app_home_opened", async ({ client }) => {
+app.event("app_home_opened", async ({ client, event }) => {
+  await client.views.publish({
+    user_id: event.user,
+    view: {
+      type: "home",
+      blocks: [
+        {
+          type: "actions",
+          elements: [
+            {
+              type: "button",
+              text: {
+                type: "plain_text",
+                text: "generate pairs 💀",
+                emoji: true,
+              },
+              action_id: "generate_btn",
+              style: "danger",
+            },
+          ],
+        },
+      ],
+    },
+  });
+});
+app.action("generate_btn", async ({ client }) => {
   try {
     const data = await client.conversations.members({
       channel: CHANNEL_ID,

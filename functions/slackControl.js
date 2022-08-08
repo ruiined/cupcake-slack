@@ -8,7 +8,6 @@ export const successMessage = async (client, channel, users) => {
     channel: channel,
     text: `Hi, <@${users[0]}> and <@${users[1]}>, you've been paired up together!`,
     blocks: [
-      { type: "divider" },
       {
         type: "section",
         text: {
