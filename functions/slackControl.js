@@ -64,3 +64,7 @@ export const welcomeMessage = async (event, client) => {
     ],
   });
 };
+
+// export const pauseUser = async (event, user, client ) => {
+//   await
+// }
