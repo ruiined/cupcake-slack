@@ -1,14 +1,17 @@
 import "dotenv/config";
 import bolt from "@slack/bolt";
-import { rejects, pairUp } from "./functions/pairGenerator.js";
+import { rejects, paused, blacklisted } from "./data.js";
+
 import {
   openConversation,
-  welcomeMessage,
-  rejectMessage,
-  successMessage,
-} from "./functions/slackControl.js";
+  refreshHome,
+  welcome,
+  reject,
+  success,
+  pairUp,
+} from "./functions/index.js";
 
-import { paused, blacklisted, view } from "./functions/homeView.js";
+import { modal } from "./views/index.js";
 
 const { App } = bolt;
 
@@ -20,27 +23,25 @@ const app = new App({
   port: process.env.PORT || 3000,
 });
 
-const CHANNEL_ID = "C03SWPQCP1A";
-
 app.event("member_joined_channel", ({ event, client }) =>
-  welcomeMessage(event, client)
+  welcome(event, client)
 );
 
 app.event("app_home_opened", async ({ client, event }) => {
-  await client.views.publish({
-    user_id: event.user,
-    view: view,
-  });
+  await refreshHome(client, event.user);
 });
 
-app.action("pause", async ({ ack, body }) => {
+app.action("pause", async ({ ack, body, client }) => {
   await ack();
+
   try {
     const user = body.user.id;
+
     paused.includes(user)
       ? paused.splice(paused.indexOf(user), 1)
       : paused.push(user);
-    console.log(paused);
+
+    await refreshHome(client, user);
   } catch (error) {
     console.error(error);
   }
@@ -51,57 +52,7 @@ app.action("blacklist", async ({ ack, client, body }) => {
   try {
     const result = await client.views.open({
       trigger_id: body.trigger_id,
-      view: {
-        type: "modal",
-        // View identifier
-        callback_id: "view_1",
-        title: {
-          type: "plain_text",
-          text: "Blacklist",
-        },
-        blocks: [
-          {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: "You can add someone to the list of people you don't want to get paired with. Don't worry, it's completely _confidential_.",
-            },
-          },
-          {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: "Show currently blacklisted",
-            },
-          },
-          {
-            type: "input",
-            block_id: "input_c",
-            label: {
-              type: "plain_text",
-              text: "Add to the blacklist:",
-            },
-            hint: {
-              type: "plain_text",
-              text: "❤️ please separate with commas when adding multiple people",
-              emoji: true,
-            },
-            element: {
-              type: "plain_text_input",
-              placeholder: {
-                type: "plain_text",
-                text: "Enter username(s)",
-              },
-
-              action_id: "dreamy_input",
-            },
-          },
-        ],
-        submit: {
-          type: "plain_text",
-          text: "Submit",
-        },
-      },
+      view: modal,
     });
     console.log(result);
   } catch (error) {
@@ -109,28 +60,42 @@ app.action("blacklist", async ({ ack, client, body }) => {
   }
 });
 
-app.action("generate_btn", async ({ client, ack, say }) => {
+app.action("blacklist_submission", async ({ ack, body }) => {
   await ack();
+});
+
+app.action("generate_btn", async ({ client, ack }) => {
+  await ack();
+  const channelList = await client.conversations.list();
+  const channelId = channelList.channels.filter(
+    (channel) => channel.is_member
+  )[0].id;
+
   try {
     const data = await client.conversations.members({
-      channel: CHANNEL_ID,
+      channel: channelId,
     });
 
     const pairs = pairUp(
       data?.members
-        ?.filter((user) => user !== "USLACKBOT" && user !== "U03SMPNA7FD")
+        ?.filter(
+          (user) =>
+            user !== "USLACKBOT" &&
+            user !== "U03SMPNA7FD" &&
+            !paused.includes(user)
+        )
         ?.map((user) => user)
     );
 
     pairs?.map(async (pair) => {
       if (!pair) return;
       const convo = await openConversation(client, pair?.join(","));
-      await successMessage(client, convo.channel.id, pair);
+      await success(client, convo.channel.id, pair);
     });
 
     rejects?.map(async (victim) => {
       if (!victim) return;
-      await rejectMessage(client, victim);
+      await reject(client, victim);
     });
 
     rejects.splice(0, rejects.length);

@@ -1,4 +1,4 @@
-export const rejects = [];
+import { rejects } from "../data.js";
 
 export const pairUp = (people) => {
   const users = [...people].sort(() => Math.random() - 0.5);

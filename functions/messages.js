@@ -1,9 +1,4 @@
-export const openConversation = (client, users) =>
-  client.conversations.open({
-    users: users,
-  });
-
-export const successMessage = async (client, channel, users) => {
+export const success = async (client, channel, users) => {
   await client.chat.postMessage({
     channel: channel,
     text: `Hi, <@${users[0]}> and <@${users[1]}>, you've been paired up together!`,
@@ -27,14 +22,14 @@ export const successMessage = async (client, channel, users) => {
   });
 };
 
-export const rejectMessage = async (client, user) => {
+export const reject = async (client, user) => {
   await client.chat.postMessage({
     channel: user,
     text: `Unfortunately, you were unlucky this week, as we couldn't find you a pair 😔 Please have a wonderful day and see you next week! 🌻💛`,
   });
 };
 
-export const welcomeMessage = async (event, client) => {
+export const welcome = async (event, client) => {
   await client.chat.postEphemeral({
     channel: event.channel,
     user: event.user,
@@ -64,7 +59,3 @@ export const welcomeMessage = async (event, client) => {
     ],
   });
 };
-
-// export const pauseUser = async (event, user, client ) => {
-//   await
-// }
