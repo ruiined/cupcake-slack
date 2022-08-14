@@ -1,4 +1,4 @@
-export const success = async (client, channel, users) => {
+export const successMsg = async (client, channel, users) => {
   await client.chat.postMessage({
     channel: channel,
     text: `Hi, <@${users[0]}> and <@${users[1]}>, you've been paired up together!`,
@@ -22,14 +22,14 @@ export const success = async (client, channel, users) => {
   });
 };
 
-export const reject = async (client, user) => {
+export const rejectMsg = async (client, user) => {
   await client.chat.postMessage({
     channel: user,
     text: `Unfortunately, you were unlucky this week, as we couldn't find you a pair 😔 Please have a wonderful day and see you next week! 🌻💛`,
   });
 };
 
-export const welcome = async (event, client) => {
+export const welcomeMsg = async (event, client) => {
   await client.chat.postEphemeral({
     channel: event.channel,
     user: event.user,
@@ -57,5 +57,16 @@ export const welcome = async (event, client) => {
         },
       },
     ],
+  });
+};
+
+export const pauseMsg = async (client, user, paused) => {
+  const message = (await paused)
+    ? `You have paused Cupcake! Hopefully we will see you again very soon 🐱🐶`
+    : `Welcome back! You have just unpaused your participation in the weekly pairings. Have fun! 🍵`;
+
+  await client.chat.postMessage({
+    channel: user,
+    text: message,
   });
 };

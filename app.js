@@ -1,17 +1,22 @@
 import "dotenv/config";
 import bolt from "@slack/bolt";
-import { rejects, paused, blacklisted } from "./data.js";
-
+import { modal } from "./views/index.js";
+import { rejects, paused, blacklist } from "./data.js";
 import {
   openConversation,
   refreshHome,
-  welcome,
-  reject,
-  success,
   pairUp,
+  welcomeMsg,
+  rejectMsg,
+  successMsg,
+  pauseMsg,
+  userHasBlacklist,
+  findBlacklist,
+  updateBlacklist,
 } from "./functions/index.js";
 
-import { modal } from "./views/index.js";
+const BOT_ID = "USLACKBOT";
+const APP_ID = "U03SMPNA7FD";
 
 const { App } = bolt;
 
@@ -24,7 +29,7 @@ const app = new App({
 });
 
 app.event("member_joined_channel", ({ event, client }) =>
-  welcome(event, client)
+  welcomeMsg(event, client)
 );
 
 app.event("app_home_opened", async ({ client, event }) => {
@@ -32,57 +37,65 @@ app.event("app_home_opened", async ({ client, event }) => {
 });
 
 app.action("pause", async ({ ack, body, client }) => {
+  const user = body.user.id;
+
   await ack();
 
   try {
-    const user = body.user.id;
-
     paused.includes(user)
       ? paused.splice(paused.indexOf(user), 1)
       : paused.push(user);
 
     await refreshHome(client, user);
+    await pauseMsg(client, user, paused.includes(user));
   } catch (error) {
     console.error(error);
   }
 });
 
 app.action("blacklist", async ({ ack, client, body }) => {
+  const user = body.user.id;
+
   await ack();
+
   try {
-    const result = await client.views.open({
+    await client.views.open({
       trigger_id: body.trigger_id,
-      view: modal,
+      view: modal(userHasBlacklist(user) ? findBlacklist(user) : []),
     });
-    console.log(result);
   } catch (error) {
     console.error(error);
   }
 });
 
-app.action("blacklist_submission", async ({ ack, body }) => {
+app.view("blacklist_submission", async ({ ack, body }) => {
+  const user = body.user.id;
+  const data = body.view.state.values.input.result.selected_users;
+
   await ack();
+
+  userHasBlacklist(user)
+    ? updateBlacklist(user, data)
+    : blacklist.push({
+        [user]: data,
+      });
 });
 
 app.action("generate_btn", async ({ client, ack }) => {
   await ack();
-  const channelList = await client.conversations.list();
-  const channelId = channelList.channels.filter(
-    (channel) => channel.is_member
-  )[0].id;
+
+  const list = await client.conversations.list();
+  const channel = list.channels.filter((channel) => channel.is_member)[0].id;
 
   try {
     const data = await client.conversations.members({
-      channel: channelId,
+      channel: channel,
     });
 
     const pairs = pairUp(
       data?.members
         ?.filter(
-          (user) =>
-            user !== "USLACKBOT" &&
-            user !== "U03SMPNA7FD" &&
-            !paused.includes(user)
+          (user) => user !== BOT_ID && user !== APP_ID && !paused.includes(user)
         )
         ?.map((user) => user)
     );
@@ -90,12 +103,12 @@ app.action("generate_btn", async ({ client, ack }) => {
     pairs?.map(async (pair) => {
       if (!pair) return;
       const convo = await openConversation(client, pair?.join(","));
-      await success(client, convo.channel.id, pair);
+      await successMsg(client, convo.channel.id, pair);
     });
 
     rejects?.map(async (victim) => {
       if (!victim) return;
-      await reject(client, victim);
+      await rejectMsg(client, victim);
     });
 
     rejects.splice(0, rejects.length);
