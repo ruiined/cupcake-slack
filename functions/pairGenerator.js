@@ -37,6 +37,5 @@ export const pairUp = (people) => {
 
     return newPair;
   });
-  // console.log({ pairs, rejects });
   return pairs;
 };
