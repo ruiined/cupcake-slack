@@ -14,7 +14,7 @@ import {
   findBlacklist,
   updateBlacklist,
 } from "./functions/index.js";
-import { BlockAction } from "@slack/bolt/dist/types/actions/block-action";
+
 const BOT_ID = "USLACKBOT";
 const APP_ID = "U03SMPNA7FD";
 
@@ -25,7 +25,7 @@ const app = new App({
   signingSecret: process.env.SLACK_SIGNING_SECRET,
   socketMode: true,
   appToken: process.env.SLACK_APP_TOKEN,
-  port: 3000,
+  port: process.env.PORT || 3000,
 });
 
 app.event("member_joined_channel", ({ event, client }) =>
@@ -60,7 +60,7 @@ app.action("blacklist", async ({ ack, client, body }) => {
 
   try {
     await client.views.open({
-      trigger_id: (<BlockAction>body).trigger_id,
+      trigger_id: body.trigger_id,
       view: modal(userHasBlacklist(user) ? findBlacklist(user) : []),
     });
   } catch (error) {
@@ -79,15 +79,13 @@ app.view("blacklist_submission", async ({ ack, body }) => {
     : blacklist.push({
         [user]: data,
       });
-  console.log(blacklist);
 });
 
 app.action("generate_btn", async ({ client, ack }) => {
   await ack();
 
   const list = await client.conversations.list();
-  const channel =
-    list?.channels?.filter((channel) => channel.is_member)[0].id ?? "";
+  const channel = list.channels.filter((channel) => channel.is_member)[0].id;
 
   try {
     const data = await client.conversations.members({

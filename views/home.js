@@ -1,5 +1,4 @@
 import { paused } from "../data.js";
-
 export const home = (user) => {
   const onPause = paused.includes(user);
   const view = {
