@@ -1,6 +1,8 @@
+const PAIRING_DAY = "Monday";
+
 export const successMsg = async (client, channel, users) => {
   await client.chat.postMessage({
-    channel: channel,
+    channel,
     text: `Hi, <@${users[0]}> and <@${users[1]}>, you've been paired up together!`,
     blocks: [
       {
@@ -46,7 +48,7 @@ export const welcomeMsg = async (event, client) => {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: "Everyone in this channel gets paired up every Monday for a cup of coffee/tea/water.",
+          text: `Everyone in this channel gets paired up every <@${PAIRING_DAY}> for a cup of coffee/tea/water.`,
         },
       },
       {
